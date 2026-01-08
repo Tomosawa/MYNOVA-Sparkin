@@ -1,0 +1,18 @@
+﻿<Application x:Class="SparkinClient.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:SparkinClient"
+             xmlns:mica="clr-namespace:MicaWPF.Styles;assembly=MicaWPF" 
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <mica:ThemeDictionary DesignModeTheme="Light" Theme="Auto" />
+                <!-- And Here (You can change to Light, Dark or auto here) -->
+                <!-- <mica:ThemeDictionary />  works too-->
+                <mica:ControlsDictionary />
+                <!-- This is mandatory -->
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

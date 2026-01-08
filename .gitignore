@@ -30,3 +30,17 @@
 *.exe
 *.out
 *.app
+
+# Cache
+.aps
+
+# Folders
+x64
+x86
+Debug
+bin
+obj
+.vs
+.vscode
+build
+Release

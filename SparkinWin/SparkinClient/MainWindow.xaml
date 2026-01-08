@@ -1,0 +1,107 @@
+﻿<controls:MicaWindow x:Class="SparkinClient.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:SparkinClient"
+        mc:Ignorable="d"
+        xmlns:controls="clr-namespace:MicaWPF.Controls;assembly=MicaWPF"
+        Title="Sparkin指纹设置" Height="500" Width="405" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" FontFamily="Microsoft YaHei UI" Icon="/icon.ico" IsVisibleChanged="MainWindow_IsVisibleChanged" ContentRendered="MainWindow_ContentRendered"
+        >
+    <Grid Margin="20,10,20,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="2*" />
+            <RowDefinition Height="1.6*"/>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="1*"/>
+        </Grid.RowDefinitions>
+        <!--指纹设备信息区域-->
+        <Grid Grid.Row="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="2*" />
+                <RowDefinition Height="2*"/>
+                <RowDefinition Height="2*"/>
+                <RowDefinition Height="2*"/>
+                <RowDefinition Height="2*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="0.8*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="指纹设备" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="14" FontWeight="Bold" HorizontalAlignment="Left"/>
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="设备名称：" HorizontalAlignment="Right" VerticalAlignment="Center" />
+            <TextBlock Grid.Row="1" Grid.Column="1" x:Name="txtDeviceName" Text="未知" HorizontalAlignment="Left" VerticalAlignment="Center" />
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="设备状态：" HorizontalAlignment="Right" VerticalAlignment="Center" />
+            <TextBlock Grid.Row="2" Grid.Column="1" x:Name="txtConnectionStatus" Text="未连接" HorizontalAlignment="Left" VerticalAlignment="Center" />
+            <TextBlock Grid.Row="3" Grid.Column="0" Text="设备电量：" HorizontalAlignment="Right" VerticalAlignment="Center" />
+            <!-- 电量图标绘制 -->
+            <Grid Grid.Row="3" Grid.Column="1" HorizontalAlignment="Left" VerticalAlignment="Center" >
+                <Border x:Name="BatteryIcon" Background="Transparent" BorderBrush="Gray" BorderThickness="2" CornerRadius="3" Width="32" Height="15" HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <Grid>
+                        <!-- 电量填充区域，保持1像素边距 -->
+                        <Rectangle x:Name="BatteryFill" Fill="LightGreen" HorizontalAlignment="Left" Margin="1,1,1,1" RadiusX="2" RadiusY="2" Width="0"/>
+                        <!-- 电池正极 -->
+                        <Border Background="Gray" Width="4" Height="4" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,-4,0" CornerRadius="1"/>
+                    </Grid>
+                </Border>
+                <TextBlock x:Name="txtBattery" Text="--" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="9" FontWeight="Bold"/>
+            </Grid>
+            <controls:Button Grid.Row="1" Grid.Column="3" Grid.RowSpan="2" x:Name="btnConnect" Content="配对设备" TabIndex="1" HorizontalAlignment="Right" VerticalAlignment="Top" Height="34" Width="90" Click="Button_Click_Connect"/>
+            <TextBlock Grid.Row="4" Grid.Column="0" Text="固件版本：" HorizontalAlignment="Right" VerticalAlignment="Center" />
+            <TextBlock Grid.Row="4" Grid.Column="1" x:Name="txtFirmwareVer" Text="未知" HorizontalAlignment="Left" VerticalAlignment="Center" />
+            <controls:Button Grid.Row="3" Grid.Column="3" Grid.RowSpan="2" x:Name="btnUpdateFirmware" Content="更新固件" TabIndex="1" HorizontalAlignment="Right" VerticalAlignment="Bottom" Height="34" Width="90" Visibility="Hidden" Click="Button_Click_UpdateFirmware"/>
+        </Grid>
+        <!--登录账号设置区域-->
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="0.8*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="登录账号设置" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="14" FontWeight="Bold"/>
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="登录用户：" HorizontalAlignment="Right" VerticalAlignment="Center" />
+            <controls:TextBox Grid.Row="1" Grid.Column="1" x:Name="txtUsername" TabIndex="3" TextWrapping="NoWrap" Text="" VerticalAlignment="Center" LostFocus="txtUsername_LostFocus"/>
+            <TextBlock Grid.Row="2" Grid.Column="0" Text="登录密码：" HorizontalAlignment="Right" VerticalAlignment="Center" />
+            <controls:PasswordBox Grid.Row="2" Grid.Column="1" x:Name="txtPassword" TabIndex="4" TextWrapping="NoWrap" Text="" VerticalAlignment="Center" LostFocus="txtPassword_LostFocus" />
+            <controls:Button Grid.Row="2" Grid.Column="3" x:Name="btnTestUnlock" Content="保存密码" TabIndex="2" VerticalAlignment="Center"  HorizontalAlignment="Right" Height="34" Width="90" Click="Button_Click_TestUnlock" />
+        </Grid>
+        <!--指纹设置区域-->
+        <Grid Grid.Row="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="2*"/>
+            </Grid.RowDefinitions>
+            <TextBlock Grid.Row="0" Text="指纹管理" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="14" FontWeight="Bold"/>
+            <ScrollViewer Grid.Row="1" Margin="10,0,0,0"  VerticalAlignment="Center" Height="80" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Hidden">
+                <ItemsControl x:Name="fingerItemsControl">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal"/>
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+        <!--省电设置区域-->
+        <Grid Grid.Row="3">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="0.8*"/>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="1*"/>
+            </Grid.ColumnDefinitions>
+            <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="3" Text="省电设置" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="14" FontWeight="Bold"/>
+            <TextBlock Grid.Row="1" Grid.Column="0" Text="睡眠时间：" HorizontalAlignment="Right" VerticalAlignment="Center" />
+            <ComboBox Grid.Row="1" Grid.Column="1" x:Name="cbSleepTime" TabIndex="5" VerticalAlignment="Center" DisplayMemberPath="Name" SelectedValuePath="Value" IsEnabled="False" />
+        </Grid>
+    </Grid>
+</controls:MicaWindow>

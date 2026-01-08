@@ -1,0 +1,33 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:sys="clr-namespace:System;assembly=mscorlib">
+    <sys:String x:Key="WinTitle">Sparkin指纹设置</sys:String>
+    <sys:String x:Key="Menu_Open">打开窗口</sys:String>
+    <sys:String x:Key="Menu_About">关于</sys:String>
+    <sys:String x:Key="Menu_Exit">退出</sys:String>
+    <sys:String x:Key="Status_Pause">已经暂停</sys:String>
+    <sys:String x:Key="Status_Check">文件校验中...</sys:String>
+    <sys:String x:Key="Status_Backup">文件备份中...</sys:String>
+    <sys:String x:Key="Status_Update">文件更新中...</sys:String>
+    <sys:String x:Key="Status_Completed">更新已完成</sys:String>
+    <sys:String x:Key="Status_Fix_Download">修复下载中...</sys:String>
+    <sys:String x:Key="Status_Clean">清理下载目录...</sys:String>
+    <sys:String x:Key="Msg_Cancel_Caption">取消更新</sys:String>
+    <sys:String x:Key="Update_Log_Title">更新日志 V</sys:String>
+    <sys:String x:Key="Msg_Cancel_Info">您确定要取消更新并退出程序吗？</sys:String>
+    <sys:String x:Key="Msg_Completed_Caption">更新完成</sys:String>
+    <sys:String x:Key="Msg_Completed_Info">版本已经更新完成，程序即将重启。</sys:String>
+    <sys:String x:Key="Msg_Close_Caption">退出程序</sys:String>
+    <sys:String x:Key="Msg_Close_Info">您确定要取消本次更新并退出程序吗？</sys:String>
+    <sys:String x:Key="Msg_Close_Info_Download">正在更新中，您确定要强制退出程序吗？</sys:String>
+    <sys:String x:Key="Msg_Error_Caption">错误</sys:String>
+    <sys:String x:Key="Msg_Error_NoConfig">E001错误：找不到更新配置文件，无法进行更新。</sys:String>
+    <sys:String x:Key="Msg_Error_ErrConfig">E002错误：配置文件解析错误，无法进行更新。</sys:String>
+    <sys:String x:Key="Msg_Error_NoVersion">E003错误：找不到可用更新，程序即将退出。</sys:String>
+    <sys:String x:Key="Msg_Error_Exception">E004错误：程序异常，即将退出。</sys:String>
+    <sys:String x:Key="Msg_Error_Fatal">E005错误：修复文件失败！发生严重错误，请重新打开程序。</sys:String>
+    <sys:String x:Key="Msg_Error_NoSpcae">E006错误：磁盘空间不足，无法完成更新，请清理磁盘后重试。</sys:String>
+    <sys:String x:Key="Msg_Error_CopyFailed">E007错误：文件复制失败，请重新启动更新程序。</sys:String>
+    <sys:String x:Key="Msg_Error_BackupFailed">E008错误：旧版本文件备份失败，请重新启动更新程序。</sys:String>
+    <sys:String x:Key="Msg_Error_CheckFailed">E009错误：文件校验失败，请重新启动更新程序。</sys:String>
+</ResourceDictionary>
