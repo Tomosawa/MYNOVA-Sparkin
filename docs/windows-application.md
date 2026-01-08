@@ -6,7 +6,7 @@ SparkinWin is the Windows supporting software for the MYNOVA-Sparkin wireless Bl
 
 ## System Architecture
 
-The Windows application suite consists of three main components:
+The Windows application suite consists of four main components:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -14,14 +14,19 @@ The Windows application suite consists of three main components:
 └─────────────┬───────────────────┬───────────────────────────────┘
               │                   │
 ┌─────────────▼─────────┐ ┌───────▼─────────────┐ ┌────────────────────┐
-│ Sparkin Service       │ │ Sparkin Config      │ │ Sparkin Credential │
+│ Sparkin Service       │ │ Sparkin Client      │ │ Sparkin Credential │
 │ (Background Service)  │ │ (Configuration App) │ │ Provider           │
-└─────────────┬─────────┘ └─────────────────────┘ └─────────┬──────────┘
-              │                                             │
-┌─────────────▼──────────┐                       ┌──────────▼──────────┐
-│ Bluetooth Communication│                       │ Windows Credential  │
-│ (BLE Protocol)         │                       │ Manager Integration │
-└────────────────────────┘                       └─────────────────────┘
+└─────────────┬─────────┘ └─────────────────────┘ └──────────┬─────────┘
+              │                                              │
+              │          ┌─────────────────────┐             │
+              │          │ Sparkin Lib         │             │
+              │          │ (Shared Library)    │             │
+              │          └─────────┬───────────┘             │
+              │                    │                         │
+┌─────────────▼──────────┐ ┌───────▼─────────────┐ ┌─────────▼──────────┐
+│ Bluetooth Communication│ │ Cross-component     │ │ Windows Credential │
+│ (BLE Protocol)         │ │ Communication       │ │ Manager Integration│
+└────────────────────────┘ └─────────────────────┘ └────────────────────┘
 ```
 
 ## Core Components
@@ -38,7 +43,7 @@ A Windows service that runs in the background to manage communication between th
 - **Automatic Startup**: Launches automatically when Windows starts
 - **Error Handling**: Logs errors and provides diagnostics
 
-### 2. Sparkin Config
+### 2. Sparkin Client
 
 **Type**: Windows Desktop Application
 
@@ -61,24 +66,68 @@ Integrates with Windows Credential Manager to enable fingerprint login:
 - **Password Management**: Securely stores and uses Windows login credentials
 - **Multi-user Support**: Works with multiple Windows user accounts
 
+### 4. Sparkin Lib
+
+**Type**: Shared Library (C#)
+
+A common library shared by all SparkinWin components:
+
+- **Bluetooth Communication**: Provides BLE protocol implementation
+- **Inter-process Communication**: Facilitates communication between components
+- **Configuration Management**: Handles application settings
+- **Logging**: Provides unified logging functionality
+- **Data Structures**: Defines common data types and message formats
+
 ## File Structure
 
 ```
 SparkinWin/
-├── SparkinCredentialProvider/   # Windows Credential Provider
+├── SparkinClient/               # Configuration Application (C# WPF)
+│   ├── Images/                  # Application images and icons
+│   ├── Languages/               # Localization resources
+│   ├── Properties/              # Project properties
+│   ├── Updater/                 # Application update functionality
+│   ├── ViewModel/               # MVVM view models
+│   ├── AboutWindow.xaml/.cs     # About dialog
+│   ├── App.xaml/.cs             # Application entry point
+│   ├── MainWindow.xaml/.cs      # Main configuration window
+│   ├── RegisterWindow.xaml/.cs  # Fingerprint registration window
+│   ├── RenameWindow.xaml/.cs    # Fingerprint rename window
+│   ├── UpdateWindow.xaml/.cs    # Update dialog
+│   ├── SparkinClient.csproj     # Project file
+│   └── app.manifest             # Application manifest
+├── SparkinCredentialProvider/   # Windows Credential Provider (C++)
 │   ├── SparkinCredentialProvider.vcxproj
 │   ├── CSampleProvider.cpp/h    # Main provider implementation
 │   ├── CSampleCredential.cpp/h  # Credential implementation
 │   ├── CPipeListener.cpp/h      # Inter-process communication
 │   ├── helpers.cpp/h            # Utility functions
-│   └── common.h                 # Common definitions
-├── DigiCert/                    # Code signing certificates
-│   ├── CoreLink.cer
-│   ├── CoreLink.pfx
-│   └── sign_files.ps1           # Signing script
-└── NSIS_SetupSkin/              # Installation package resources
-    ├── NSIS/                    # NSIS installer files
-    └── FilesToInstall/          # Files to be installed
+│   ├── common.h                 # Common definitions
+│   ├── Dll.cpp/h                # DLL entry points
+│   ├── guid.cpp/h               # GUID definitions
+│   ├── resource.h               # Resource definitions
+│   ├── resources.rc             # Resource file
+│   ├── Register.reg             # Registration script
+│   └── Unregister.reg           # Unregistration script
+├── SparkinLib/                  # Shared Library (C#)
+│   ├── Bluetooth/               # Bluetooth communication
+│   ├── PipeLine/                # Inter-process communication
+│   ├── Properties/              # Project properties
+│   ├── Structs/                 # Data structures
+│   ├── Tools/                   # Utility tools
+│   ├── ConfigManager.cs         # Configuration management
+│   ├── LogUtil.cs               # Logging utilities
+│   ├── SparkinLib.csproj        # Project file
+│   └── XMLHelper.cs             # XML processing
+├── SparkinService/              # Windows Service (C#)
+│   ├── Properties/              # Project properties
+│   ├── MainService.cs           # Service implementation
+│   ├── Program.cs               # Service entry point
+│   ├── SparkinService.csproj    # Project file
+│   ├── SparkinServiceInstaller.cs  # Service installer
+│   ├── InstallService.bat       # Installation script
+│   └── UninstallService.bat     # Uninstallation script
+└── Sparkin.sln                  # Solution file
 ```
 
 ## Development Environment
@@ -98,15 +147,6 @@ SparkinWin/
 2. Select the appropriate build configuration (Debug/Release)
 3. Build the solution
 4. Sign the resulting binaries (optional, but recommended for Windows 10/11)
-
-### Code Signing
-
-The project includes code signing resources in the `DigiCert` directory:
-
-```powershell
-# Sign the compiled files using PowerShell
-.ign_files.ps1
-```
 
 ## Installation
 
@@ -128,10 +168,10 @@ The project includes code signing resources in the `DigiCert` directory:
 
 ### Initial Setup
 
-1. Launch the Sparkin Config application
+1. Launch the Sparkin Client application
 2. Ensure Bluetooth is enabled on your Windows system
 3. Put the Sparkin device in pairing mode (press and hold the button for 3 seconds)
-4. Click "Add Device" in the config app
+4. Click "Add Device" in the client app
 5. Select "Sparkin FP01" from the list of available devices
 6. Follow the pairing instructions
 
@@ -236,8 +276,9 @@ The system uses a binary protocol for communication:
 #### Adding New Features
 
 1. **Service**: Add new functionality to the Sparkin Service by extending the `SparkinService` class
-2. **Configuration App**: Add new UI elements and functionality to the configuration application
+2. **Client App**: Add new UI elements and functionality to the Sparkin Client application
 3. **Credential Provider**: Extend the credential provider to support additional authentication scenarios
+4. **Shared Library**: Add new functionality to the Sparkin Lib for shared use across components
 
 #### Modifying the Communication Protocol
 

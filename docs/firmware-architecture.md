@@ -16,9 +16,10 @@ The firmware follows a modular design pattern with clear separation of concerns:
               │                   │                   │
 ┌─────────────▼─────────┐ ┌───────▼─────────────┐ ┌───▼───────────────┐
 │  Fingerprint Module   │ │  Bluetooth Module   │ │ Power Management  │
-│  (Fingerprint.cpp/h)  │ │  (BleKeyboard.cpp/h │ │ (BatteryManager.  │
+│  (Fingerprint.cpp/h)  │ │  (BleKeyboard.cpp/h,│ │ (BatteryManager.  │
 │                       │ │  BluetoothManager.  │ │  cpp/h, Sleep.cpp │
-│                       │ │  cpp/h)             │ │  /h)              │
+│                       │ │  cpp/h, BluetoothHa │ │  /h)              │
+│                       │ │  ndle.cpp/h)        │ │                   │
 └─────────────┬─────────┘ └───────┬─────────────┘ └─┬─────────────────┘
               │                   │                 │
 ┌─────────────▼─────────┐ ┌───────▼─────────────┐ ┌─▼─────────────────┐
@@ -59,7 +60,7 @@ Responsible for all fingerprint-related operations:
 
 ### 3. Bluetooth Module
 
-**Files**: `BluetoothManager.cpp/h`, `BleKeyboard.cpp/h`
+**Files**: `BluetoothManager.cpp/h`, `BleKeyboard.cpp/h`, `BluetoothHandle.cpp/h`
 
 Handles all wireless communication:
 
@@ -68,6 +69,7 @@ Handles all wireless communication:
 - **Message Protocol**: Implements custom message format for communication
 - **BleKeyboard**: Emulates keyboard input for Windows login
 - **Advertising**: Manages device discovery and pairing
+- **Connection Handling**: Manages Bluetooth connection states and events
 
 Key Bluetooth UUIDs:
 - Service UUID: `0000180f-0000-1000-8000-00805f9b34fb`
@@ -231,7 +233,7 @@ The device uses a custom binary protocol over Bluetooth BLE for communication wi
 |---------|------|---------|
 | 1.0.0   | 2023-12-15 | Initial release |
 | 1.0.1   | 2023-12-20 | Fixed battery reporting |
-| 1.1.0   | 2024-01-05 | Added OTA update support |
+| 1.1     | 2024-01-05 | Added OTA update support |
 
 ---
 
