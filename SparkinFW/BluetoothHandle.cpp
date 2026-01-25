@@ -11,13 +11,14 @@
 #include "IOPin.h"
 #include "Common.h"
 #include "BluetoothOTA.h"
+#include "SleepManager.h"
 
 extern Fingerprint fingerprint;
 extern BluetoothManager bluetoothManager;
 extern ConfigManager configManager;
 extern VersionInfo versionInfo;
 extern bool bCancelRegister;
-extern uint32_t lastActivityTime;
+extern SleepManager sleepManager;
 BluetoothOTA bluetoothOTA;
 
 #define BLUETOOTH_TASK_STACK_SIZE 4096
@@ -235,7 +236,6 @@ void bluetoothMessageTask(TaskParameters* params) {
                     xEventGroupSetBits(event_group, EVENT_BIT_BLE_NOTIFY); // 设置设备通知事件位
                 }
                 bluetoothManager.isConnectedNotify = true;
-                bPairMode = false; // 收到蓝牙订阅打通了肯定配对成功了
                 // 蓝牙连上了，恢复蓝色呼吸灯
                 fingerprint.setLEDCmd(Fingerprint::LED_CODE_BREATH,0x01,0x01,0x00,18);  // 蓝色呼吸灯
                 break;
@@ -246,12 +246,29 @@ void bluetoothMessageTask(TaskParameters* params) {
                     Serial.println("[Task] Invalid enable sleep data");
                     break;
                 }
-                bEnableSleep = params->data[0] != 0; // 0表示禁用休眠，非0表示启用
-                if (bEnableSleep) {
+                bool enable = params->data[0] != 0; // 0表示禁用休眠，非0表示启用
+                sleepManager.preventSleep(!enable);
+                if (enable) {
                     Serial.println("[Task] Sleep mode enabled");
                 } else {
                     Serial.println("[Task] Sleep mode disabled");
                 }
+                break;
+            }
+            case MSG_CHECK_SLEEP:{
+                Serial.println("[Task] Processing check sleep request");
+                if (params->length < 1) {
+                    Serial.println("[Task] Invalid check sleep data");
+                    xEventGroupSetBits(event_group, EVENT_BIT_BLE_SLEEP_ENABLE);
+                    break;
+                }
+                bool bEnableSleep = params->data[0] != 0; // 0表示禁用休眠，非0表示启用
+                if (bEnableSleep) {
+                    Serial.println("[Task] Alow enter sleep mode");
+                } else {
+                    Serial.println("[Task] Deny enter sleep mode, UI actived");
+                }
+                xEventGroupSetBits(event_group, EVENT_BIT_BLE_SLEEP_ENABLE);
                 break;
             }
             case MSG_FIRMWARE_UPDATE_START:{
@@ -326,7 +343,7 @@ void bluetoothMessageTask(TaskParameters* params) {
 
 // 处理从蓝牙接收到的消息（改为入队）
 void handleBluetoothMessage(uint8_t msgType, uint8_t* data, size_t length) {
-    lastActivityTime = millis(); // 更新最后活动时间
+    
     if (!bluetoothMsgQueue) {
         Serial.println("[BLE] Queue not initialized!");
         return;

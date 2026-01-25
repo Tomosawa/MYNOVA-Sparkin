@@ -7,6 +7,8 @@
 #define FINGERPRINT_H
 
 #include <Arduino.h>
+#include <freertos/FreeRTOS.h>
+#include <freertos/semphr.h>
 
 class Fingerprint
 {
@@ -102,6 +104,7 @@ private:
     int _rx_pin;
     int _tx_pin;
     uint8_t _buffer_id;
+    SemaphoreHandle_t _mutex; // 互斥锁
 
     // 私有方法
     void sendCmd12(uint8_t cmd);

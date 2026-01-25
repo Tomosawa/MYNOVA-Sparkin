@@ -32,7 +32,10 @@ namespace SparkinLib
                     ConfigFile configFile = LoadFromXmlFile(configPath, log);
                     if (configFile != null)
                     {
-                        log.Info($"[CONFIG_LOAD]已从配置文件加载设备信息:  LoginUserName={configFile.LoginUserName}, LoginPassword={configFile.LoginPassword}");
+                        string passwordMask = "";
+                        for (int i = 0; i < configFile.LoginPassword.Length; i++)
+                            passwordMask += "*";
+                        log.Info($"[CONFIG_LOAD]已从配置文件加载设备信息:  LoginUserName={configFile.LoginUserName}, LoginPassword={passwordMask}");
                         return configFile;
                     }
                 }
@@ -79,7 +82,7 @@ namespace SparkinLib
             try
             {
                 var xmlSerializer = new XmlSerializer(typeof(ConfigFile));
-                using (var fs = new FileStream(filePath, FileMode.Create))
+                using (var fs = new FileStream(filePath, FileMode.Create, FileAccess.Write, FileShare.Read))
                 using (var writer = new StreamWriter(fs))
                 {
                     xmlSerializer.Serialize(writer, configFile);
@@ -96,7 +99,7 @@ namespace SparkinLib
             try
             {
                 var xmlSerializer = new XmlSerializer(typeof(ConfigFile));
-                using (var fs = new FileStream(filePath, FileMode.Open))
+                using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
                 using (var reader = new StreamReader(fs))
                 {
                     return (ConfigFile)xmlSerializer.Deserialize(reader);

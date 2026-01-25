@@ -584,8 +584,26 @@ namespace SparkinClient
                             case PipeMessage.MessageType.BluetoothError:
                                 // 处理错误
                                 log.Error($"蓝牙错误: {message.StringData}");
-                                MessageBox.Show("蓝牙设备连接失败！请尝试以下操作：\r\n1. 关闭设备电源。\r\n2. 点击“解除配对”按钮。\r\n3. 重新开机长按底部配对按钮3秒进入配对模式。\r\n4. 点击“配对设备”按钮进行配对即可。\r\n\r\n错误信息：" + message.StringData, "设备连接错误", MessageBoxButton.OK, MessageBoxImage.Error);
+                                MessageBox.Show("蓝牙设备连接失败！请尝试以下操作：\r\n1. 关闭设备电源。\r\n2. 点击\"解除配对\"按钮。\r\n3. 重新开机长按底部配对按钮3秒进入配对模式。\r\n4. 点击\"配对设备\"按钮进行配对即可。\r\n\r\n错误信息：" + message.StringData, "设备连接错误", MessageBoxButton.OK, MessageBoxImage.Error);
                                 break;
+                                
+                            case PipeMessage.MessageType.CheckSleepRequest:
+                                 log.Info("[PIPE]收到检查休眠请求，返回禁止休眠");
+                                 PipeMessage checkSleepResponse = new PipeMessage
+                                 {
+                                     Type = PipeMessage.MessageType.CheckSleepResponse,
+                                     Data = new byte[] { 0 }
+                                 };
+                                 try
+                                 {
+                                     pipeClient.SendMessage(checkSleepResponse);
+                                     log.Info("[PIPE]CheckSleepResponse 发送成功");
+                                 }
+                                 catch (Exception ex)
+                                 {
+                                     log.Error($"[PIPE]发送 CheckSleepResponse 失败: {ex.Message}");
+                                 }
+                                 break;
                         }
                     }
                 }

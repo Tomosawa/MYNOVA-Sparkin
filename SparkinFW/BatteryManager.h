@@ -16,7 +16,7 @@ public:
     void init();
     float readVoltage();
     float calculateBatteryPercent(float voltage);
-
+    void CheckBatteryLow();
 private:
     // 内部ADC读取方法
     uint32_t readADC();

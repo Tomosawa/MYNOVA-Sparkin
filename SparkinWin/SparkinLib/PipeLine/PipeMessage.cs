@@ -36,7 +36,9 @@ namespace SparkinLib
             ReloadConfig,
             FirmwareUpdateStart,
             FirmwareUpdateChunk,
-            FirmwareUpdateEnd
+            FirmwareUpdateEnd,
+            CheckSleepRequest,
+            CheckSleepResponse
         }
 
         public MessageType Type { get; set; }

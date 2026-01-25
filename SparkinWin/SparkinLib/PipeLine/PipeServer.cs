@@ -73,6 +73,14 @@ namespace SparkinLib
             }
         }
 
+        public bool IsConnected()
+        {
+            lock (serverLock)
+            {
+                return serverPipe != null && serverPipe.IsConnected;
+            }
+        }
+
         private void CloseServerPipe()
         {
             lock (serverLock)

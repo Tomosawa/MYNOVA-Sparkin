@@ -7,6 +7,19 @@
 #include "Common.h"
 #include "IOPin.h"
 #include "BluetoothManager.h"
+
+// 简单的RAII锁辅助类
+class FingerprintLock {
+    SemaphoreHandle_t _mutex;
+public:
+    FingerprintLock(SemaphoreHandle_t mutex) : _mutex(mutex) {
+        if (_mutex) xSemaphoreTake(_mutex, portMAX_DELAY);
+    }
+    ~FingerprintLock() {
+        if (_mutex) xSemaphoreGive(_mutex);
+    }
+};
+
 // #define HLK_DEBUG //打开日志打印
 
 bool bCancelRegister = false; // 用于取消注册指纹的标志
@@ -17,6 +30,7 @@ Fingerprint::Fingerprint(int rx_pin, int tx_pin)
     _rx_pin = rx_pin;
     _tx_pin = tx_pin;
     _buffer_id = 0;
+    _mutex = xSemaphoreCreateMutex(); // 创建互斥锁
 }
 
 // 初始化函数
@@ -41,6 +55,7 @@ void Fingerprint::printHex(uint8_t *data, uint8_t len)
 
 void Fingerprint::setPower(bool on)
 {
+    FingerprintLock lock(_mutex);
     if (on)
     {
         digitalWrite(PIN_FINGERPRINT_POWER, HIGH);
@@ -57,6 +72,7 @@ void Fingerprint::setPower(bool on)
 // 读取模组基本参数
 bool Fingerprint::readInfo()
 {
+    FingerprintLock lock(_mutex);
     uint8_t response[32] = {0};
     uint8_t index = 0;
     uint32_t startTime = millis();
@@ -158,6 +174,7 @@ bool Fingerprint::readInfo()
 // 注册指纹
 bool Fingerprint::registerFingerprint(int template_id)
 {
+    FingerprintLock lock(_mutex);
     _buffer_id = 1;
     while (_buffer_id <= 5)
     {
@@ -252,6 +269,7 @@ bool Fingerprint::registerFingerprint(int template_id)
 // 搜索指纹
 bool Fingerprint::searchFingerprint()
 {
+    FingerprintLock lock(_mutex);
     int serch_cnt = 0;
     _buffer_id = 1;
     while (serch_cnt <= 5)
@@ -300,6 +318,7 @@ bool Fingerprint::searchFingerprint()
 
 bool Fingerprint::autoIdentifyFingerprint()
 {
+    FingerprintLock lock(_mutex);
     int search_cnt = 0;
     _buffer_id = 1;
     int startTime = millis();
@@ -327,6 +346,7 @@ bool Fingerprint::autoIdentifyFingerprint()
 // 删除指定指纹
 bool Fingerprint::deleteFingerprint(uint16_t id)
 {
+    FingerprintLock lock(_mutex);
     // 发送删除指令
     sendCmd16(CMD_DELETE_CHAR, id, 1);
 
@@ -347,6 +367,7 @@ bool Fingerprint::deleteFingerprint(uint16_t id)
 // 清空指纹库
 bool Fingerprint::clearAllLib()
 {
+    FingerprintLock lock(_mutex);
     sendCmd12(CMD_CLEAR_LIB);
     if (receiveResponse())
     {
@@ -357,6 +378,7 @@ bool Fingerprint::clearAllLib()
 
 bool Fingerprint::setLEDAutoManual(int autoMode)
 {
+    FingerprintLock lock(_mutex);
     // 发送呼吸灯自动手动切换指令
     sendCmd13(CMD_LED_AUTO_MANUAL, autoMode);
     if (receiveResponse())
@@ -374,6 +396,7 @@ bool Fingerprint::setLEDAutoManual(int autoMode)
 
 bool Fingerprint::setLEDCmd(uint8_t code, uint8_t startColor, uint8_t endColor, uint8_t loopCount)
 {
+    FingerprintLock lock(_mutex);
     // 发送呼吸灯指令
     sendCmd16(CMD_LED_CM, code, startColor, endColor, loopCount);
     if (receiveResponse())
@@ -398,6 +421,7 @@ bool Fingerprint::setLEDCmd(uint8_t code, uint8_t startColor, uint8_t endColor, 
 
 bool Fingerprint::setLEDCmd(uint8_t code, uint8_t startColor, uint8_t endColorOrdutyCicle, uint8_t loopCount, uint8_t time)
 {
+    FingerprintLock lock(_mutex);
     // 发送呼吸灯指令
     sendCmd17(CMD_LED_CM, code, startColor, endColorOrdutyCicle, loopCount, time);
     if (receiveResponse())
@@ -425,6 +449,7 @@ bool Fingerprint::setLEDCmd(uint8_t code, uint8_t startColor, uint8_t endColorOr
 // 读取有效模板数量
 int Fingerprint::readValidTempleteNum()
 {
+    FingerprintLock lock(_mutex);
     sendCmd12(CMD_VALID_TEMPLATE_NUM);
     int templateNum = 0;
     if (receiveResponse(templateNum))
@@ -437,6 +462,7 @@ int Fingerprint::readValidTempleteNum()
 // 读取索引表
 bool Fingerprint::readIndexTable(uint8_t *indexTable)
 {
+    FingerprintLock lock(_mutex);
     // 初始化索引表
     memset(indexTable, 0, 32);
     
@@ -774,6 +800,8 @@ bool Fingerprint::receiveResponse()
             {
                 break;
             }
+            // 没有数据可读时，让出CPU给其他任务，避免触发看门狗
+            yield();
         }
     }
 
@@ -795,6 +823,7 @@ bool Fingerprint::receiveResponse()
 
 bool Fingerprint::waitStartSignal()
 {
+    FingerprintLock lock(_mutex);
     uint32_t startTime = millis();
 
     // 等待响应包，最多等待500毫秒
@@ -808,7 +837,9 @@ bool Fingerprint::waitStartSignal()
                 return true; // 成功接收到开始信号
             }
         }
-        delay(10); // 等待一段时间再检查
+        // 使用 yield() 代替 delay()，让其他任务有机会运行，避免触发看门狗
+        yield();
+        delayMicroseconds(10000); // 10ms
     }
     return false; // 超时未接收到开始信号
 }
@@ -856,6 +887,8 @@ bool Fingerprint::receiveResponse(int &data)
             {
                 break;
             }
+            // 没有数据可读时，让出CPU给其他任务，避免触发看门狗
+            yield();
         }
     }
 

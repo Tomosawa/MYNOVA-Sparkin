@@ -30,6 +30,7 @@ namespace SparkinLib.Bluetooth
         public const byte MSG_FIRMWARE_UPDATE_START = 0x24; //固件升级开始
         public const byte MSG_FIRMWARE_UPDATE_CHUNK = 0x25; //固件升级传输
         public const byte MSG_FIRMWARE_UPDATE_END = 0x26; //固件升级结束
+        public const byte MSG_CHECK_SLEEP = 0x27; // 检查可否现在进行休眠，返回UI界面是否打开的状态
 
         public const byte MAX_FINGER_NAME_LENGTH = 32; //指纹名称最大长度
 

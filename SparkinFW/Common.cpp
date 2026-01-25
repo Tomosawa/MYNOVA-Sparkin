@@ -20,7 +20,5 @@ void init_event_group() {
     event_group = xEventGroupCreate();
 }
 
-bool bSleepMode = false; // 是否进入睡眠模式
-bool bEnableSleep = true; // 是否启用自动休眠
-bool bPairMode = false; // 是否处于配对模式
+// bPairMode已移除，改用 bluetoothManager.isPairingMode() 动态判断
 float batteryPercentage = 100.0; // 电池电量百分比

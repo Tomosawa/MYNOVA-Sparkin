@@ -1,4 +1,7 @@
-﻿using System;
+﻿using NLog;
+using SparkinLib;
+using SparkinLib.Bluetooth;
+using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
@@ -28,6 +31,8 @@ namespace SparkinClient
         private int timerCountDown = 4;
 
         private bool bFailed = false; // 是否录入失败一次
+        // 日志记录
+        private Logger log = LogUtil.GetLogger();
 
         public RegisterWindow(byte fingerId)
         {
@@ -121,6 +126,26 @@ namespace SparkinClient
 
         private bool HandlePipeMessage(PipeMessage message)
         {
+            if (message.Type == PipeMessage.MessageType.CheckSleepRequest)
+            {
+                log.Info("[RegisterWindow]收到检查休眠请求，返回0（禁止休眠）");
+                PipeMessage checkSleepResponse = new PipeMessage
+                {
+                    Type = PipeMessage.MessageType.CheckSleepResponse,
+                    Data = new byte[] { 0 }
+                };
+                try
+                {
+                    pipeClient.SendMessage(checkSleepResponse);
+                    log.Info("[RegisterWindow]CheckSleepResponse 发送成功");
+                }
+                catch (Exception ex)
+                {
+                    log.Error($"[RegisterWindow]发送 CheckSleepResponse 失败: {ex.Message}");
+                }
+                return true;
+            }
+            
             if (message.Type != PipeMessage.MessageType.BluetoothDataReceived || message.Data == null || message.Data.Length < 4)
                 return false;
                 
@@ -166,7 +191,7 @@ namespace SparkinClient
                     
                 case CmdMessage.MSG_REMOVE_FINGER:
                     return true;
-                    
+              
                 case CmdMessage.MSG_FINGERPRINT_REGISTER:
                     {
                         // 检查指纹注册结果

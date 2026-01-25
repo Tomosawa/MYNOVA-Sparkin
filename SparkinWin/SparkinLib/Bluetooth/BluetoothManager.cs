@@ -427,7 +427,6 @@ namespace SparkinLib.Bluetooth
                 else
                 {
                     log.Info("[UI_BT_UNPAIR]设备未配对，无需操作。");
-                    // 如果设备本就未配对，可以视为“成功”操作
                     return true;
                 }
 
@@ -438,212 +437,11 @@ namespace SparkinLib.Bluetooth
                 // 这里的异常通常是 CreateFromIdAsync 失败，例如设备ID无效或设备不存在
                 log.Error($"[UI_BT_UNPAIR]获取设备信息时出错: {ex.Message}");
                 log.Error($"[UI_BT_UNPAIR]异常堆栈: {ex.StackTrace}");
-                ErrorOccurred?.Invoke(this, "找不到指定的设备，无法取消配对。");
+
+                ErrorOccurred?.Invoke(this, "找不到指定的设备。");
                 return false;
             }
         }
-
-        ///// <summary>
-        ///// 改进的设备配对函数
-        ///// </summary>
-        //public async Task<bool> PairDeviceAsync()
-        //{
-        //    try
-        //    {
-        //        if (connectedDeviceInfo == null)
-        //        {
-        //            log.Info("[BTM_PairDevice]未找到设备信息，无法配对");
-        //            return false;
-        //        }
-
-        //        // 检查是否已配对
-        //        if (connectedDeviceInfo.Pairing.IsPaired)
-        //        {
-        //            log.Info("[BTM_PairDevice]设备已配对,不需要再次配对");
-        //            return true;
-        //        }
-
-        //        // 先尝试使用系统默认的非交互式配对方式
-        //        log.Info("[BTM_PairDevice]先尝试使用系统默认配对...");
-        //        var defaultPairResult = await connectedDeviceInfo.Pairing.PairAsync();
-        //        log.Info($"[BTM_PairDevice]系统默认配对结果: {defaultPairResult.Status}");
-
-        //        if (defaultPairResult.Status == DevicePairingResultStatus.Paired ||
-        //            defaultPairResult.Status == DevicePairingResultStatus.AlreadyPaired)
-        //        {
-        //            log.Info("[BTM_PairDevice]使用系统默认配对成功");
-        //            return true;
-        //        }
-
-        //        log.Info("[BTM_PairDevice]系统默认配对失败，尝试自定义配对...");
-
-        //        // 配置配对选项 - 优先使用不需要用户交互的配对方式
-        //        DevicePairingKinds ceremonySelection = DevicePairingKinds.None;
-        //        ceremonySelection |= DevicePairingKinds.ConfirmOnly;  // 首选，只需确认
-
-        //        // 在Windows服务中，可能无法处理需要显示PIN码的情况，但仍然添加以支持所有可能的配对方式
-        //        ceremonySelection |= DevicePairingKinds.ProvidePin;   
-        //        ceremonySelection |= DevicePairingKinds.DisplayPin;
-        //        ceremonySelection |= DevicePairingKinds.ConfirmPinMatch;
-        //        ceremonySelection |= DevicePairingKinds.ProvidePasswordCredential;
-
-        //        log.Info($"[BTM_PairDevice]配对选项已配置: {ceremonySelection}");
-
-        //        // 创建自定义配对
-        //        DeviceInformationCustomPairing customPairing = connectedDeviceInfo.Pairing.Custom;
-        //        log.Info("[BTM_PairDevice]已创建自定义配对对象");
-
-        //        // 注册配对请求事件
-        //        customPairing.PairingRequested += PairingRequested;
-        //        log.Info("[BTM_PairDevice]已注册PairingRequested事件");
-
-        //        try
-        //        {
-        //            log.Info("[BTM_PairDevice]开始配对...");
-
-        //            // 请求配对
-        //            log.Info($"[BTM_PairDevice]调用PairAsync，ceremonySelection={ceremonySelection}");
-        //            DevicePairingResult pairingResult = await customPairing.PairAsync(
-        //                ceremonySelection,
-        //                DevicePairingProtectionLevel.None);  // 尝试使用较低的保护级别
-
-        //            log.Info($"[BTM_PairDevice]收到配对结果: {pairingResult.Status}");
-
-        //            // 处理配对结果
-        //            switch (pairingResult.Status)
-        //            {
-        //                case DevicePairingResultStatus.Paired:
-        //                    log.Info("[BTM_PairDevice]配对成功");
-        //                    return true;
-
-        //                case DevicePairingResultStatus.AlreadyPaired:
-        //                    log.Info("[BTM_PairDevice]设备已经配对");
-        //                    return true;
-
-        //                case DevicePairingResultStatus.OperationAlreadyInProgress:
-        //                    log.Info("[BTM_PairDevice]配对操作已在进行中，等待后重试");
-        //                    await Task.Delay(3000); // 等待3秒
-
-        //                    // 再次尝试配对
-        //                    log.Info("[BTM_PairDevice]重新尝试配对...");
-        //                    pairingResult = await customPairing.PairAsync(
-        //                        ceremonySelection,
-        //                        DevicePairingProtectionLevel.None);
-
-        //                    log.Info($"[BTM_PairDevice]重试配对结果: {pairingResult.Status}");
-
-        //                    if (pairingResult.Status == DevicePairingResultStatus.Paired)
-        //                    {
-        //                        log.Info("[BTM_PairDevice]重试配对成功");
-        //                        return true;
-        //                    }
-        //                    log.Info($"[BTM_PairDevice]重试配对失败: {pairingResult.Status}");
-        //                    return false;
-
-        //                // 尝试依次使用不同的配对方式
-        //                case DevicePairingResultStatus.AuthenticationFailure:
-        //                case DevicePairingResultStatus.AuthenticationNotAllowed:
-        //                case DevicePairingResultStatus.AuthenticationTimeout:
-        //                    log.Info("[BTM_PairDevice]认证相关错误，尝试仅使用ConfirmOnly配对方式...");
-
-        //                    // 仅使用ConfirmOnly配对方式再试一次
-        //                    pairingResult = await customPairing.PairAsync(
-        //                        DevicePairingKinds.ConfirmOnly,
-        //                        DevicePairingProtectionLevel.None);
-
-        //                    if (pairingResult.Status == DevicePairingResultStatus.Paired)
-        //                    {
-        //                        log.Info("[BTM_PairDevice]使用ConfirmOnly配对成功");
-        //                        return true;
-        //                    }
-        //                    return false;
-
-        //                // 其他情况保持不变...
-        //                case DevicePairingResultStatus.NotReadyToPair:
-        //                    log.Info("[BTM_PairDevice]设备未准备好配对");
-        //                    return false;
-
-        //                case DevicePairingResultStatus.NotPaired:
-        //                    log.Info("[BTM_PairDevice]配对未完成");
-        //                    return false;
-
-        //                case DevicePairingResultStatus.ConnectionRejected:
-        //                    log.Info("[BTM_PairDevice]连接被拒绝");
-        //                    return false;
-
-        //                case DevicePairingResultStatus.TooManyConnections:
-        //                    log.Info("[BTM_PairDevice]连接数量过多");
-        //                    return false;
-
-        //                case DevicePairingResultStatus.HardwareFailure:
-        //                    log.Info("[BTM_PairDevice]硬件故障");
-        //                    return false;
-
-        //                case DevicePairingResultStatus.NoSupportedProfiles:
-        //                    log.Info("[BTM_PairDevice]不支持的配置文件");
-        //                    return false;
-
-        //                case DevicePairingResultStatus.ProtectionLevelCouldNotBeMet:
-        //                    log.Info("[BTM_PairDevice]无法满足保护级别要求，尝试无保护级别...");
-        //                    // 尝试使用无保护级别
-        //                    pairingResult = await customPairing.PairAsync(
-        //                        DevicePairingKinds.ConfirmOnly,
-        //                        DevicePairingProtectionLevel.None);
-
-        //                    if (pairingResult.Status == DevicePairingResultStatus.Paired)
-        //                    {
-        //                        log.Info("[BTM_PairDevice]使用无保护级别配对成功");
-        //                        return true;
-        //                    }
-        //                    return false;
-
-        //                case DevicePairingResultStatus.AccessDenied:
-        //                    log.Info("[BTM_PairDevice]访问被拒绝");
-        //                    return false;
-
-        //                case DevicePairingResultStatus.InvalidCeremonyData:
-        //                    log.Info("[BTM_PairDevice]无效的配对数据");
-        //                    return false;
-
-        //                case DevicePairingResultStatus.PairingCanceled:
-        //                    log.Info("[BTM_PairDevice]配对已取消");
-        //                    return false;
-
-        //                case DevicePairingResultStatus.RequiredHandlerNotRegistered:
-        //                    log.Info("[BTM_PairDevice]所需处理程序未注册");
-        //                    return false;
-
-        //                case DevicePairingResultStatus.RejectedByHandler:
-        //                    log.Info("[BTM_PairDevice]处理程序拒绝配对");
-        //                    return false;
-
-        //                case DevicePairingResultStatus.RemoteDeviceHasAssociation:
-        //                    log.Info("[BTM_PairDevice]远程设备已有关联");
-        //                    return false;
-
-        //                case DevicePairingResultStatus.Failed:
-        //                    log.Info("[BTM_PairDevice]配对失败");
-        //                    return false;
-
-        //                default:
-        //                    log.Info($"[BTM_PairDevice]未知配对状态: {pairingResult.Status}");
-        //                    return false;
-        //            }
-        //        }
-        //        finally
-        //        {
-        //            // 清理事件处理
-        //            log.Info("[BTM_PairDevice]清理PairingRequested事件");
-        //            customPairing.PairingRequested -= PairingRequested;
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        log.Info($"[BTM_PairDevice]配对设备时出错: {ex.Message}");
-        //        log.Info($"[BTM_PairDevice]异常堆栈: {ex.StackTrace}");
-        //        return false;
-        //    }
-        //}
 
         /// <summary>
         /// 配对请求事件处理
@@ -860,20 +658,22 @@ namespace SparkinLib.Bluetooth
         private async void DeviceWatcher_Added(DeviceWatcher sender, DeviceInformation args)
         {
             log.Info($"[DeviceWatcher_Added]发现指定设备 {args.Name}");
+
+            // 不判断信号强度，可能不准确，导致不去尝试连接设备了。（20260123）
             int SignalStrength = -120; // 默认信号强度
-            if (args.Properties.ContainsKey("System.Devices.Aep.SignalStrength"))
-            {
-                var Signal = args.Properties.Single(d => d.Key == "System.Devices.Aep.SignalStrength").Value;
-                if (Signal == null)
-                {
-                    return;
-                }
-                SignalStrength = int.Parse(Signal.ToString());
-                if (SignalStrength <= -100)
-                {
-                    return;
-                }
-            }
+            // if (args.Properties.ContainsKey("System.Devices.Aep.SignalStrength"))
+            // {
+            //     var Signal = args.Properties.Single(d => d.Key == "System.Devices.Aep.SignalStrength").Value;
+            //     if (Signal == null)
+            //     {
+            //         return;
+            //     }
+            //     SignalStrength = int.Parse(Signal.ToString());
+            //     if (SignalStrength <= -100)
+            //     {
+            //         return;
+            //     }
+            // }
             //保存设备信息
             log.Info($"[DeviceWatcher_Added]记录设备信息 {args.Name} ID: {args.Id} Signal: {SignalStrength} dBm");
             bluetoothDevices[args.Id] = new BluetoothDeviceInfo
@@ -922,16 +722,29 @@ namespace SparkinLib.Bluetooth
                 }
             }
             // 更新相关值
-            BluetoothDeviceInfo bluetoothDevice = null;
-            if (bluetoothDevices.TryGetValue(args.Id, out bluetoothDevice))
+            if (!bluetoothDevices.ContainsKey(args.Id))
             {
+                bluetoothDevices[args.Id] = new BluetoothDeviceInfo
+                {
+                    Name = deviceInformation.Name,
+                    Id = args.Id,
+                    Address = args.Id.Split('-')[1],
+                    IsPaired = deviceInformation.Pairing.IsPaired,
+                    CanPair = deviceInformation.Pairing.CanPair,
+                    SignalStrength = SignalStrength
+                };
+            }
+            else
+            {
+                BluetoothDeviceInfo bluetoothDevice = bluetoothDevices[args.Id];
                 bluetoothDevice.Name = deviceInformation.Name;
                 bluetoothDevice.Address = args.Id.Split('-')[1];
                 bluetoothDevice.IsPaired = deviceInformation.Pairing.IsPaired;
                 bluetoothDevice.CanPair = deviceInformation.Pairing.CanPair;
-                if (SignalStrength != -120)
-                    bluetoothDevice.SignalStrength = SignalStrength;
+                bluetoothDevice.SignalStrength = SignalStrength;
             }
+            BluetoothDeviceInfo device = bluetoothDevices[args.Id];
+            log.Info($"[DeviceWatcher_Updated]更新设备信息 Name: {device.Name} ID: {device.Id} Address: {device.Address} IsPaired: {device.IsPaired} CanPair: {device.CanPair} Signal: {SignalStrength} dBm");
         }
 
         private void DeviceWatcher_Removed(DeviceWatcher sender, DeviceInformationUpdate args)
@@ -947,24 +760,47 @@ namespace SparkinLib.Bluetooth
                     BluetoothLEDevice bleDevice;
                     if (bleDevices.TryRemove(args.Id, out bleDevice))
                     {
-                        bleDevice.ConnectionStatusChanged -= ConnectedDevice_ConnectionStatusChanged;
-                        bleDevice.Dispose();
+                        try
+                        {
+                            bleDevice.ConnectionStatusChanged -= ConnectedDevice_ConnectionStatusChanged;
+                            bleDevice.Dispose();
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Info($"[DeviceWatcher_Removed]清理蓝牙设备时出错: {ex.Message}");
+                        }
                     }
 
                     // 清理配对设备配置文件
                     if (connectedDevice != null && connectedDevice.DeviceId == deviceInfo.Id)
                     {
-                        connectedDevice.Dispose();
+                        try
+                        {
+                            connectedDevice.Dispose();
+                        }
+                        catch (Exception ex)
+                        {
+                            log.Info($"[DeviceWatcher_Removed]清理连接设备时出错: {ex.Message}");
+                        }
                         connectedDevice = null;
                     }
 
-                    DeviceRemoved?.Invoke(this, "");
-
+                    try
+                    {
+                        DeviceRemoved?.Invoke(this, "");
+                    }
+                    catch (Exception ex)
+                    {
+                        log.Error($"[DeviceWatcher_Removed]触发设备移除事件时出错: {ex.Message}");
+                        log.Error($"[DeviceWatcher_Removed]异常类型: {ex.GetType().FullName}");
+                        log.Error($"[DeviceWatcher_Removed]异常堆栈: {ex.StackTrace}");
+                    }
                 }
             }
             catch (Exception ex)
             {
                 log.Info($"[DeviceWatcher_Removed]处理设备移除事件时出错: {ex.Message}");
+                log.Error($"[DeviceWatcher_Removed]异常堆栈: {ex.StackTrace}");
             }
         }
 
@@ -1241,6 +1077,29 @@ namespace SparkinLib.Bluetooth
             }
         }
 
+        public async Task SendCheckSleepResponseAsync(byte canSleep)
+        {
+            if (connectedDevice == null || selectedCharacteristic == null)
+            {
+                log.Info("[BTM_CheckSleepCmd]设备未连接或未订阅");
+                return;
+            }
+
+            try
+            {
+                byte[] commandData = new byte[2];
+                commandData[0] = CmdMessage.MSG_CHECK_SLEEP;
+                commandData[1] = canSleep;
+                await SendDataAsync(commandData);
+                log.Info($"[BTM_CheckSleepCmd]已发送检查休眠响应: {canSleep}");
+            }
+            catch (Exception ex)
+            {
+                log.Error($"[BTM_CheckSleepCmd]发送检查休眠响应时出错: {ex.Message}");
+                ErrorOccurred?.Invoke(this, $"发送检查休眠响应时出错: {ex.Message}");
+            }
+        }
+
         /// <summary>
         /// 发送订阅成功通知
         /// </summary>
@@ -1371,17 +1230,18 @@ namespace SparkinLib.Bluetooth
         {
             // 遍历bluetoothDevices
             string deviceId = "";
-            int maxSignalStrength = -120;
+            //int maxSignalStrength = -120;
             foreach (var device in bluetoothDevices.Values)
             {
                 if (!device.IsPaired && device.CanPair)
                 {
-                    // 找到信号最强的那个
-                    if(device.SignalStrength > maxSignalStrength)
-                    {
-                        maxSignalStrength = device.SignalStrength;
-                        deviceId = device.Id;
-                    }
+                    // 找到信号最强的那个（可能没信号参数，去掉）
+                    // if(device.SignalStrength >= maxSignalStrength)
+                    // {
+                    //     maxSignalStrength = device.SignalStrength;
+                    //     deviceId = device.Id;
+                    // }
+                    return device.Id;
                 }
             }
             return deviceId;
@@ -1452,16 +1312,25 @@ namespace SparkinLib.Bluetooth
             string deviceName = "";
             bool isPaired = false;
             string deviceId  = "";
-            foreach (var device in bluetoothDevices.Values)
+            
+            try
             {
-                if (device.IsPaired)
+                foreach (var device in bluetoothDevices.Values)
                 {
-                    deviceName = device.Name;
-                    isPaired = true;
-                    deviceId = device.Id;
-                    break;
+                    if (device.IsPaired)
+                    {
+                        deviceName = device.Name;
+                        isPaired = true;
+                        deviceId = device.Id;
+                        break;
+                    }
                 }
             }
+            catch (Exception ex)
+            {
+                log.Info($"[GetPairedDevice]获取配对设备时出错: {ex.Message}");
+            }
+
             return deviceName + "|" + isPaired.ToString() + "|" + deviceId;
         }
         #endregion

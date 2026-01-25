@@ -6,6 +6,7 @@
 #include "Sleep.h"
 #include <esp_sleep.h>
 #include <esp_wifi.h>
+#include <driver/gpio.h>
 #include "IOPin.h"
 
 void configureWakeupSources() {

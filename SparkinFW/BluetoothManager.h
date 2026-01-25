@@ -35,10 +35,11 @@ static const uint8_t MSG_SET_SLEEPTIME = 0x10; //设置睡眠时间
 static const uint8_t MSG_SET_FINGER_NAME = 0x20;   // 设置指纹名称
 static const uint8_t MSG_GET_FINGER_NAMES = 0x21;  // 获取所有指纹名称
 static const uint8_t MSG_RENAME_FINGER_NAME = 0x22; // 重命名指纹名称
-static const uint8_t MSG_ENABLE_SLEEP = 0x23; // 是否启动自动休眠
+static const uint8_t MSG_ENABLE_SLEEP = 0x23; // 启用/禁用休眠模式
 static const uint8_t MSG_FIRMWARE_UPDATE_START = 0x24; //开始固件升级
 static const uint8_t MSG_FIRMWARE_UPDATE_CHUNK = 0x25; //传输固件块
 static const uint8_t MSG_FIRMWARE_UPDATE_END = 0x26; ///固件升级结束
+static const uint8_t MSG_CHECK_SLEEP = 0x27; // 检查可否现在进行休眠，返回UI界面是否打开的状态
 
 static const uint8_t MSG_REST_ALL = 0x99; // 恢复出厂设置
 
@@ -86,6 +87,7 @@ private:
     BLEAddress* pClientAddress; // 保存当前连接的客户端地址
     bool autoReconnect;       // 是否自动重连
     bool isAdvertising;       // 是否正在广播
+    String deviceName;        // 保存设备名称，用于重新初始化
     // 在BluetoothManager.h中修改onConnect方法声明
     SemaphoreHandle_t sendMutex;
     SemaphoreHandle_t stateMutex; // 添加状态互斥锁
@@ -106,6 +108,9 @@ public:
     // 初始化蓝牙
     void begin(const char* deviceName, BleKeyboard* bleKeyboard);
     
+    // 重新初始化BLE（用于更换地址）
+    void reinitBLE(const char* deviceName);
+    
     // 设置消息回调函数
     void setMessageCallback(MessageCallback callback);
     
@@ -113,7 +118,7 @@ public:
     bool sendMessage(const uint8_t msgType, const uint8_t* data = nullptr, size_t length = 0);
     
     // 处理蓝牙事件，需要在loop中调用
-    void update();
+    void loop();
     
     // 检查是否已连接（更准确，直接查询BLE连接数）
     bool isConnected();
@@ -141,8 +146,15 @@ public:
     // 清除已保存的配对信息
     void clearPairedDevices();
     
-    // 配对当前连接的设备
-    bool pairDevice();
+    // 获取已绑定设备数量
+    int getBondedDeviceCount() {
+        return esp_ble_get_bond_device_num();
+    }
+    
+    // 检查是否处于配对模式（动态判断：无绑定设备=配对模式）
+    bool isPairingMode() {
+        return (esp_ble_get_bond_device_num() == 0);
+    }
     
     // 开始广播
     void startAdvertising(bool bFastMode = true);
@@ -161,6 +173,19 @@ public:
     void disconnectCurrentDevice();
 
     void setBatteryLevel(uint8_t level);
+
+    // 启用或禁用自动重连/广播
+    void enableAutoAdvertising(bool enable);
+    
+    // 请求取消配对（将操作推迟到主循环执行）
+    void requestUnpairDevice();
+
+private:
+    // 添加自动广播使能标志
+    bool _autoAdvertisingEnabled;
+    
+    // 取消配对请求标志
+    bool _unpairRequest;
 };
 
 #endif // BLUETOOTH_MANAGER_H

@@ -28,6 +28,12 @@ public:
     
     // 停止定时器
     void end();
+
+    // 轮询按键状态（需在任务中定期调用）
+    void poll();
+
+    // 检查是否处于空闲状态（按键释放且稳定），用于判断是否可以进入休眠等待
+    bool isIdle() const;
     
     // 获取当前按键状态
     bool isPressed() const;
@@ -48,10 +54,10 @@ public:
     Event _lastEvent;
 
 private:
-    hw_timer_t* _timer;
+    // hw_timer_t* _timer; // 移除硬件定时器
 
-    // 定时器中断处理函数
-    static void IRAM_ATTR _onTimer(void *arg);
+    // 定时器中断处理函数 - 移除
+    // static void IRAM_ATTR _onTimer(void *arg);
     
 };
 

@@ -12,7 +12,9 @@ enum ButtonNotifyType {
     BUTTON_NOTIFY_3S = 1,
     BUTTON_NOTIFY_10S = 2,
     BUTTON_RELEASE_3S = 4,
-    BUTTON_RELEASE_10S = 8
+    BUTTON_RELEASE_10S = 8,
+    BUTTON_NOTIFY_PRESS = 16,
+    BUTTON_NOTIFY_RELEASE = 32
 };
 
 class ButtonHandler {

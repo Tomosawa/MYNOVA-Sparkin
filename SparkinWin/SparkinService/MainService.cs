@@ -21,10 +21,8 @@ namespace SparkinService
         private BluetoothDeviceInfo bluetoothDeviceInfo = null;
         // 管道服务
         private PipeServer pipeServer;
-        
         // 配置文件
         private ConfigFile configFile = null;
-
         // 日志记录器
         private Logger log = LogUtil.GetLogger();
 
@@ -35,26 +33,66 @@ namespace SparkinService
 
         protected override void OnStart(string[] args)
         {
-            try
-            {
-                log.Info("[Service_OnStart]Sparkin Service 启动");
-                
-                // 初始化管道服务器
-                pipeServer = new PipeServer(this);
-                pipeServer.Start();
-                
-                // 初始化蓝牙管理器
-                InitializeBluetoothManager();
-                
-                // 开始监听蓝牙设备
-                bluetoothManager.StartMonitoringPairedDevices();
+            log.Info("[Service_OnStart]Sparkin Service 启动中...");
 
-                // 初始化配置文件
-                configFile = ConfigManager.LoadConfigFile(log);
-            }
-            catch (Exception ex)
+            var initializationTask = Task.Run(() =>
             {
-                log.Error($"[Service_OnStart]服务启动时出错: {ex.Message}");
+                try
+                {
+                    log.Info("[Service_OnStart]步骤1: 初始化管道服务器");
+                    pipeServer = new PipeServer(this);
+                    pipeServer.Start();
+
+                    log.Info("[Service_OnStart]步骤2: 初始化蓝牙管理器");
+                    InitializeBluetoothManager();
+
+                    log.Info("[Service_OnStart]步骤3: 开始监听蓝牙设备");
+                    bluetoothManager.StartMonitoringPairedDevices();
+
+                    log.Info("[Service_OnStart]步骤4: 加载配置文件");
+                    configFile = ConfigManager.LoadConfigFile(log);
+
+                    log.Info("[Service_OnStart]Sparkin Service 启动成功");
+                }
+                catch (Exception ex)
+                {
+                    log.Error($"[Service_OnStart]服务启动失败: {ex.Message}");
+                    log.Error($"[Service_OnStart]异常类型: {ex.GetType().FullName}");
+                    log.Error($"[Service_OnStart]异常堆栈: {ex.StackTrace}");
+                    
+                    if (ex.InnerException != null)
+                    {
+                        log.Error($"[Service_OnStart]内部异常: {ex.InnerException.Message}");
+                        log.Error($"[Service_OnStart]内部异常堆栈: {ex.InnerException.StackTrace}");
+                    }
+
+                    log.Error("[Service_OnStart]服务启动失败，正在停止服务...");
+                    
+                    try
+                    {
+                        this.Stop();
+                    }
+                    catch (Exception stopEx)
+                    {
+                        log.Error($"[Service_OnStart]停止服务时出错: {stopEx.Message}");
+                    }
+                }
+            });
+
+            var timeoutTask = Task.Delay(30000);
+            var completedTask = Task.WhenAny(initializationTask, timeoutTask).Result;
+
+            if (completedTask == timeoutTask)
+            {
+                log.Error("[Service_OnStart]服务启动超时（30秒），停止服务");
+                try
+                {
+                    this.Stop();
+                }
+                catch (Exception stopEx)
+                {
+                    log.Error($"[Service_OnStart]停止服务时出错: {stopEx.Message}");
+                }
             }
         }
 
@@ -103,15 +141,39 @@ namespace SparkinService
             // 通知客户端,重新获取配对状态
             if (pipeServer != null)
             {
-                log.Info($"[PIPE]准备发送设备移除通知，获取配对状态");
-                string pairedDevice = bluetoothManager.GetPairedDevice();
-                log.Info($"[PIPE]设备状态：" + pairedDevice);
-                PipeMessage pipeMsg = new PipeMessage
+                try
                 {
-                    Type = PipeMessage.MessageType.BluetoothPairStatus,
-                    StringData = pairedDevice
-                };
-                pipeServer.SendMessage(pipeMsg);
+                    log.Info($"[PIPE]准备发送设备移除通知，获取配对状态");
+                    string pairedDevice = bluetoothManager.GetPairedDevice();
+                    log.Info($"[PIPE]设备状态：" + pairedDevice);
+                    PipeMessage pipeMsg = new PipeMessage
+                    {
+                        Type = PipeMessage.MessageType.BluetoothPairStatus,
+                        StringData = pairedDevice
+                    };
+                    pipeServer.SendMessage(pipeMsg);
+                }
+                catch (Exception ex)
+                {
+                    log.Error($"[BluetoothManager_DeviceRemoved]处理设备移除通知时出错: {ex.Message}");
+                    log.Error($"[BluetoothManager_DeviceRemoved]异常类型: {ex.GetType().FullName}");
+                    log.Error($"[BluetoothManager_DeviceRemoved]异常堆栈: {ex.StackTrace}");
+                    
+                    // 即使出错，也要发送空状态通知客户端
+                    try
+                    {
+                        PipeMessage pipeMsg = new PipeMessage
+                        {
+                            Type = PipeMessage.MessageType.BluetoothPairStatus,
+                            StringData = "|False|"
+                        };
+                        pipeServer.SendMessage(pipeMsg);
+                    }
+                    catch (Exception sendEx)
+                    {
+                        log.Error($"[BluetoothManager_DeviceRemoved]发送设备移除通知失败: {sendEx.Message}");
+                    }
+                }
             }
         }
 
@@ -200,6 +262,28 @@ namespace SparkinService
                                 Data = data
                             };
                             pipeServer.SendMessage(message);
+                        }
+                        break;
+                        
+                    case CmdMessage.MSG_CHECK_SLEEP:
+                        log.Info("[BT_DataReceived]收到检查休眠请求");
+                        
+                        // 检查管道是否存在（客户端是否连接）
+                        if (pipeServer != null && pipeServer.IsConnected())
+                        {
+                            log.Info("[BT_DataReceived]管道已连接，向客户端发送检查休眠请求");
+                            PipeMessage checkSleepRequest = new PipeMessage
+                            {
+                                Type = PipeMessage.MessageType.CheckSleepRequest
+                            };
+                            pipeServer.SendMessage(checkSleepRequest);
+                        }
+                        else
+                        {
+                            log.Info("[BT_DataReceived]管道未连接，UI未运行，可以休眠");
+                            Task.Run(async () => {
+                                await bluetoothManager.SendCheckSleepResponseAsync(1);
+                            });
                         }
                         break;
                     default:
@@ -429,6 +513,30 @@ namespace SparkinService
                             }
                             break;
                         }
+                    case PipeMessage.MessageType.CheckSleepResponse:
+                        log.Info($"[PIPE]收到客户端检查休眠响应");
+                        if (message.Data != null && message.Data.Length > 0)
+                        {
+                            byte canSleep = message.Data[0];
+                            log.Info($"[PIPE]客户端返回检查休眠值: {canSleep}");
+                            Task.Run(async () =>
+                            {
+                                try
+                                {
+                                    await bluetoothManager.SendCheckSleepResponseAsync(canSleep);
+                                    log.Info($"[PIPE]已转发检查休眠响应给蓝牙设备: {canSleep}");
+                                }
+                                catch (Exception ex)
+                                {
+                                    log.Error($"[PIPE]转发检查休眠响应失败: {ex.Message}");
+                                }
+                            });
+                        }
+                        else
+                        {
+                            log.Error("[PIPE]CheckSleepResponse 数据为空");
+                        }
+                        break;
                 }
             }
             catch (Exception ex)

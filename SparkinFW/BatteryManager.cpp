@@ -6,6 +6,11 @@
 #include "BatteryManager.h"
 #include "IOPin.h"
 #include "Common.h"
+#include "Fingerprint.h"
+#include "BluetoothManager.h"
+
+extern Fingerprint fingerprint;
+extern BluetoothManager bluetoothManager;
 /* VBAT */
 const float battery_min = 3.0; // (V) minimum voltage of battery before shutdown
 const float battery_max = 4.2; // (V) maximum voltage of battery
@@ -99,5 +104,21 @@ float BatteryManager::readVoltage() {
 
 float BatteryManager::calculateBatteryPercent(float voltage) {
     float percent = (voltage - battery_min) / (battery_max - battery_min) * 100.0;
-    return percent > 100.0 ? 100.0 : percent;
+    if(percent < 0)
+        percent = 0.0;
+    if(percent > 100)
+        percent = 100.0;
+    return percent;
 }
+
+void BatteryManager::CheckBatteryLow(){
+    float batteryVoltage = readVoltage();
+    batteryPercentage = calculateBatteryPercent(batteryVoltage);
+    bluetoothManager.setBatteryLevel((uint8_t)batteryPercentage);
+    Serial.printf("Battery Voltage: %.2f V, Percentage: %.2f%%\n", batteryVoltage, batteryPercentage);
+    // 如果电池电量低于阈值，发出警告
+    if (batteryPercentage < 20.0) {
+      fingerprint.setLEDCmd(Fingerprint::LED_CODE_BLINK,0x04,0x11,0x00,12);  // 红色闪烁灯
+      Serial.println(">>>Warning<<<: Battery level is low! Please charge the device.");
+    }
+  }

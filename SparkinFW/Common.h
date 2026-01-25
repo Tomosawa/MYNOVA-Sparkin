@@ -17,15 +17,14 @@
 #define EVENT_BIT_BLE_DISCONNECTED (1 << 2) // 蓝牙断开事件位
 #define EVENT_BIT_BLE_NOTIFY (1 << 3) // 蓝牙订阅成功可通讯了
 #define EVENT_BIT_BLE_SEARCH (1 << 4) // 蓝牙指纹解锁事件位
+#define EVENT_BIT_BLE_SLEEP_ENABLE (1 << 5) // 蓝牙休眠事件位
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 extern EventGroupHandle_t event_group;
 extern volatile bool touchTriggered;
-extern bool bSleepMode; // 是否进入睡眠模式（指示器）
-extern bool bEnableSleep; // 是否启用自动休眠
-extern bool bPairMode; // 是否处于配对模式
+// bPairMode已移除，改用 bluetoothManager.isPairingMode() 动态判断
 extern float batteryPercentage; // 电池电量百分比
 
 void IRAM_ATTR handleTouchInterrupt();
