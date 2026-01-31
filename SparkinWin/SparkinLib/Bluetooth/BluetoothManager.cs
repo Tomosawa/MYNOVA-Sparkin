@@ -683,7 +683,8 @@ namespace SparkinLib.Bluetooth
                 Address = args.Id.Split('-')[1],
                 IsPaired = args.Pairing.IsPaired,
                 CanPair = args.Pairing.CanPair,
-                SignalStrength = SignalStrength
+                SignalStrength = SignalStrength,
+                LastSeen = DateTime.Now
             };
 
             // 检查是否已经创建过该设备的实例
@@ -731,7 +732,8 @@ namespace SparkinLib.Bluetooth
                     Address = args.Id.Split('-')[1],
                     IsPaired = deviceInformation.Pairing.IsPaired,
                     CanPair = deviceInformation.Pairing.CanPair,
-                    SignalStrength = SignalStrength
+                    SignalStrength = SignalStrength,
+                    LastSeen = DateTime.Now
                 };
             }
             else
@@ -742,6 +744,7 @@ namespace SparkinLib.Bluetooth
                 bluetoothDevice.IsPaired = deviceInformation.Pairing.IsPaired;
                 bluetoothDevice.CanPair = deviceInformation.Pairing.CanPair;
                 bluetoothDevice.SignalStrength = SignalStrength;
+                bluetoothDevice.LastSeen = DateTime.Now;
             }
             BluetoothDeviceInfo device = bluetoothDevices[args.Id];
             log.Info($"[DeviceWatcher_Updated]更新设备信息 Name: {device.Name} ID: {device.Id} Address: {device.Address} IsPaired: {device.IsPaired} CanPair: {device.CanPair} Signal: {SignalStrength} dBm");
@@ -1230,18 +1233,18 @@ namespace SparkinLib.Bluetooth
         {
             // 遍历bluetoothDevices
             string deviceId = "";
-            //int maxSignalStrength = -120;
+            DateTime lastSeen = DateTime.MinValue;
+
             foreach (var device in bluetoothDevices.Values)
             {
                 if (!device.IsPaired && device.CanPair)
                 {
-                    // 找到信号最强的那个（可能没信号参数，去掉）
-                    // if(device.SignalStrength >= maxSignalStrength)
-                    // {
-                    //     maxSignalStrength = device.SignalStrength;
-                    //     deviceId = device.Id;
-                    // }
-                    return device.Id;
+                    // 优先选择最近发现/更新的设备
+                    if (device.LastSeen > lastSeen)
+                    {
+                        lastSeen = device.LastSeen;
+                        deviceId = device.Id;
+                    }
                 }
             }
             return deviceId;

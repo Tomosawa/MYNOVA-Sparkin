@@ -56,7 +56,7 @@ void BluetoothManager::begin(const char *deviceName, BleKeyboard *bleKeyboard)
     pSecurity->setRespEncryptionKey(ESP_BLE_ENC_KEY_MASK | ESP_BLE_ID_KEY_MASK); // 响应端也启用
     
     // 启用 RPA
-    esp_ble_gap_config_local_privacy(true);
+    //esp_ble_gap_config_local_privacy(true);
 
     // 打印当前已绑定设备数量
     int bondedCount = esp_ble_get_bond_device_num();
@@ -595,6 +595,12 @@ void BluetoothManager::unpairDevice()
     if (isConnected()) {
         disconnectCurrentDevice();
         delay(100); // 等待断开完成
+    }
+
+    // 如果正在广播，也需要停止，以便后续重新生成地址并广播
+    if (isAdvertising) {
+        stopAdvertising();
+        delay(100);
     }
     
     // 2. 清除所有BLE绑定

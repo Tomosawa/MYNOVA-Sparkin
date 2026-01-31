@@ -7,7 +7,7 @@
 #define H_VERSION_H
 #include <Arduino.h>
 
-#define FIRMWARE_VERSION    "1.2"
+#define FIRMWARE_VERSION    "1.3"
 
 struct VersionInfo {
     String deviceId;  // 设备ID

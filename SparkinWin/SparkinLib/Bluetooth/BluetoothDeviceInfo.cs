@@ -23,6 +23,7 @@ namespace SparkinLib.Bluetooth
         private bool _isConnected;
         private int _signalStrength;
         private int _batteryLevel;
+        private DateTime _lastSeen;
 
         public string Name
         {
@@ -71,6 +72,12 @@ namespace SparkinLib.Bluetooth
         {
             get => _batteryLevel;
             set { _batteryLevel = value; }
+        }
+
+        public DateTime LastSeen
+        {
+            get => _lastSeen;
+            set { _lastSeen = value; }
         }
 
         public override string ToString()
