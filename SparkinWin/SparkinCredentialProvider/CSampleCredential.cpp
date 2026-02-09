@@ -73,9 +73,6 @@ HRESULT CSampleCredential::Initialize(
 {
     HRESULT hr = S_OK;
 
-    _pwzUsername = username;
-    _pwzPassword = password;
-
     _cpus = cpus;
 
     // Copy the field descriptors for each field. This is useful if you want to vary the field
@@ -86,14 +83,51 @@ HRESULT CSampleCredential::Initialize(
         hr = FieldDescriptorCopy(rgcpfd[i], &_rgCredProvFieldDescriptors[i]);
     }
 
+    // Make copies of username and password to avoid memory management issues
+    HANDLE hHeap = GetProcessHeap();
+    if (username)
+    {
+        size_t cchUsername;
+        hr = StringCchLengthW(username, 512, &cchUsername);
+        if (SUCCEEDED(hr))
+        {
+            _pwzUsername = (PWSTR)HeapAlloc(hHeap, 0, (cchUsername + 1) * sizeof(WCHAR));
+            if (_pwzUsername)
+            {
+                hr = StringCchCopyW(_pwzUsername, cchUsername + 1, username);
+            }
+            else
+            {
+                hr = E_OUTOFMEMORY;
+            }
+        }
+    }
+    if (SUCCEEDED(hr) && password)
+    {
+        size_t cchPassword;
+        hr = StringCchLengthW(password, 512, &cchPassword);
+        if (SUCCEEDED(hr))
+        {
+            _pwzPassword = (PWSTR)HeapAlloc(hHeap, 0, (cchPassword + 1) * sizeof(WCHAR));
+            if (_pwzPassword)
+            {
+                hr = StringCchCopyW(_pwzPassword, cchPassword + 1, password);
+            }
+            else
+            {
+                hr = E_OUTOFMEMORY;
+            }
+        }
+    }
+
     // Initialize the String value of all the fields.
     if (SUCCEEDED(hr))
     {
-        hr = SHStrDupW(L"Administrator", &_rgFieldStrings[SFI_USERNAME]);
+        hr = SHStrDupW(_pwzUsername, &_rgFieldStrings[SFI_USERNAME]);
     }
     if (SUCCEEDED(hr))
     {
-        hr = SHStrDupW(L"", &_rgFieldStrings[SFI_PASSWORD]);
+        hr = SHStrDupW(_pwzPassword, &_rgFieldStrings[SFI_PASSWORD]);
     }
     if (SUCCEEDED(hr))
     {

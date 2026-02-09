@@ -230,7 +230,7 @@ HRESULT KerbInteractiveUnlockLogonInit(
                     break;
 
                 case CPUS_CREDUI:
-                    pkil->MessageType = (KERB_LOGON_SUBMIT_TYPE)0; // MessageType does not apply to CredUI
+                    pkil->MessageType = KerbInteractiveLogon;//(KERB_LOGON_SUBMIT_TYPE)0; // MessageType does not apply to CredUI
                     hr = S_OK;
                     break;
 

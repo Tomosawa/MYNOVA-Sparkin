@@ -1,7 +1,7 @@
+#include "afxres.h"
 // Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
-#include "afxres.h"
 /////////////////////////////////////////////////////////////////////////////
 // 中文(简体，中国) resources
 
@@ -48,8 +48,8 @@ END
 //
 
 VS_VERSION_INFO VERSIONINFO
- FILEVERSION 1,0,0,1
- PRODUCTVERSION 1,0,0,1
+ FILEVERSION 1,5,0,0
+ PRODUCTVERSION 1,5,0,0
  FILEFLAGSMASK 0x3fL
 #ifdef _DEBUG
  FILEFLAGS 0x1L
@@ -66,12 +66,12 @@ BEGIN
         BEGIN
             VALUE "CompanyName", "MYNOVA"
             VALUE "FileDescription", "SparkinCredentialProvider"
-            VALUE "FileVersion", "1.0.0.1"
+            VALUE "FileVersion", "1.5.0.0"
             VALUE "InternalName", "SparkinC.dll"
             VALUE "LegalCopyright", "Copyright (C) Tomosawa 2026"
             VALUE "OriginalFilename", "SparkinC.dll"
             VALUE "ProductName", "MYNOVA-Sparkin"
-            VALUE "ProductVersion", "1.0.0.1"
+            VALUE "ProductVersion", "1.5.0.0"
         END
     END
     BLOCK "VarFileInfo"

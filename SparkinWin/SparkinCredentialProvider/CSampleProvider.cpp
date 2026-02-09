@@ -74,7 +74,8 @@ HRESULT CSampleProvider::SetUsageScenario(
     switch (cpus)
     {
     case CPUS_LOGON:
-    case CPUS_UNLOCK_WORKSTATION:       
+    case CPUS_UNLOCK_WORKSTATION:
+    case CPUS_CREDUI:
         _cpus = cpus;
 
         // Create the CSampleCredential (for connected scenarios), the CMessageCredential
@@ -132,7 +133,6 @@ HRESULT CSampleProvider::SetUsageScenario(
         }
         break;
 
-    case CPUS_CREDUI:
     case CPUS_CHANGE_PASSWORD:
         hr = E_NOTIMPL;
         break;

@@ -4,7 +4,6 @@
 //
 #define VS_VERSION_INFO                 1
 #define IDB_TILE_IMAGE                  101
-#define IDC_STATIC                      -1
 
 // Next default values for new objects
 // 
